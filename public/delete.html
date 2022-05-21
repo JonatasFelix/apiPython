@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt_br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./js/index.js" defer></script>
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./css/form.css" rel="stylesheet">
+    <title>API - Cliente 0.1</title>
+</head>
+<body>
+
+    <header>
+        <div class="titulo">
+            <h1>Cliente API</h1>
+            <h1 id="versao">v 0.1</h1>
+        </div>
+
+        <div class="menu">
+            <div><a href="./consutarid.html">Consutar id</a></div>
+            <div><a href="./index.html">Adicionar</a></div>
+            <div><a href="./cadastrados.html">Lista</a></div>
+        </div>
+    </header>
+
+
+    <main>
+        <div>
+            <h2>DELETAR CLIENTE:</h2>
+            <form id="formulario_delete">
+                <label id="textInput" for="deleteid">ID:</label>
+                <input type="text" id="deleteid" placeholder="Digite o ID:">
+                <input type="submit" value="DELETAR" onclick="deleteDataById()">
+            </form>
+        </div>
+    </main>
+
+    <ul id="teste">
+
+    </ul>
+
+    <footer>
+        <h1>Cliente API</h1>
+        <h1>Projeto api</h1>
+    </footer>
+
+</body>
+</html>

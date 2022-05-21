@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt_br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./js/index.js" defer></script>
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./css/form.css" rel="stylesheet">
+    <title>API - Cliente 0.1</title>
+</head>
+<body>
+
+    <header>
+        <div class="titulo">
+            <h1>Cliente API</h1>
+            <h1 id="versao">v 0.1</h1>
+        </div>
+
+        <div class="menu">
+            <div><a href="./delete.html">Deletar</a></div>
+            <div><a href="./index.html">Adicionar</a></div>
+            <div><a href="./cadastrados.html">Lista</a></div>
+        </div>
+    </header>
+
+
+    <main>
+        <div>
+            <h2>CONSULTAR ID:</h2>
+            <form id="formulario_consultar">
+                <label id="textInput" for="consultarid">ID:</label>
+                <input type="text" id="consultarid" placeholder="Digite o ID:">
+                <input type="submit" value="CONSULTAR ID" onclick="consultarDataById()">
+            </form>
+        </div>
+    </main>
+
+    <ul id="result_id">
+    </ul>
+
+    <footer>
+        <h1>Cliente API</h1>
+        <h1>Projeto api</h1>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+#formulario {
+    display: flex;
+    flex-direction: column;
+}
+
+#formulario input[type="submit"] {
+    text-transform: uppercase;
+    font-size: 20px;
+    font-weight: bolder;
+    cursor: pointer;
+}
+
+
+label {
+    padding: 5px 0;
+}
+
+input {
+    padding: 6px;
+    margin-bottom: 15px;
+}
+
+input[type="submit"] {
+    text-transform: uppercase;
+    font-weight: bolder;
+    cursor: pointer;
+}
+
+label #textInput {
+    font-size: 20px;
+}
+
