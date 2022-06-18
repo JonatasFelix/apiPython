@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from typing import List, Optional, Union
 from pydantic import BaseModel
 from uuid import uuid4
+from erros import Item, Message, error404, sucessoDelete, sucessoCadastro, cepErro, compradorNaoCadastrado, quantidadeDeProdutosInvalida, vendedorNaoCadastrado, produtoNaoLocalizado, sucessoVenda
+import json
+import requests
 
 app = FastAPI()
 
@@ -26,33 +31,50 @@ app.add_middleware(
 
 
 class Cadastro(BaseModel):
-    id: Optional[str]
+    id: Optional[str];
     nome: str
-    sobrenome: str
+    cep: str
+    logradouro: Optional[str] = "GERADO AUTOMATICAMENTE"
+    bairro: Optional[str] = "GERADO AUTOMATICAMENTE"
+    cidade: Optional[str] = "GERADO AUTOMATICAMENTE"
     email: str
-    fone: int
-    estado: str
-    cidade: str
+    idade: str
+    cpf: str
 
 
 armazenamento: list[Cadastro] = []
 
+class Venda(BaseModel):
+    id: Optional[str] = "Gerado Automaticamente"
+    nomeComprador: Optional[str] = "Gerado pelo CPF"
+    cpfComprador: str
+    idVendedor: str
+    vendedor: Optional[str] = "Gerado pelo ID"
+    idProduto: str
+    produto: Optional[str] = "Gerado pelo ID"
+    quantidade: int
+    precoUnidade: Optional[str] = "Gerado pelo ID"
+    precoTotal: Optional[str] = "Gerado Automaticamente"
 
-@app.get('/clientes')
+
+armazenamentoVendas: list[Venda] = []
+
+
+@app.get('/clientes', response_model=list)
 def listar_clientes():
     return armazenamento
 
 
-@app.get('/clientes/{cliente_id}')
+@app.get('/clientes/{cliente_id}', response_model=Cadastro, responses={404: {"model": Message}})
 def obter_cliente(cliente_id: str):
     for cliente in armazenamento:
         if cliente.id == cliente_id:
             return cliente
     else:
-        return {'status': '404', 'error': 'Cliente_id não localizado'}
+       return error404
 
 
-@app.delete('/clientes/{cliente_id}')
+@app.delete('/clientes/{cliente_id}', response_model=Message, responses={404: {"model": Message}})
 def deletar_cliente(cliente_id: str):
     posicao = -1
     for index, cliente in enumerate(armazenamento):
@@ -62,13 +84,73 @@ def deletar_cliente(cliente_id: str):
 
     if posicao != -1:
         armazenamento.pop(posicao)
-        return {'mensagem': 'O cliente foi removido com sucesso!'}
-    else:
-        return {'error': 'Cliente_id não localizado!'}
+        return sucessoDelete
+    return error404
 
 
 @app.post('/cadastrar')
 def cadastrar_cliente(cliente: Cadastro):
     cliente.id = str(uuid4())
+
+    pegandoCep = requests.get("https://viacep.com.br/ws/{}/json/".format(cliente.cep))
+    pegandoCep = pegandoCep.json()
+
+    if "erro" in pegandoCep:
+        return cepErro
+
+    cliente.logradouro = format(pegandoCep['logradouro'])
+    cliente.bairro = format(pegandoCep['bairro'])
+    cliente.cidade = format(pegandoCep['localidade'])
+
     armazenamento.append(cliente)
-    return {'mensagem': f'Olá {cliente.nome}, seu cadastro foi efetuado com sucesso!'}
+    return sucessoCadastro
+
+
+@app.get('/venda')
+def listar_vendas():
+    return armazenamentoVendas
+
+
+@app.post('/venda', responses={404: {"model": Message}})
+def adicionar_venda(dadosVenda: Venda):
+
+    if (dadosVenda.quantidade == 0): # VERIFICA SE A QUANTIDADE É IGUAL A 0
+        return quantidadeDeProdutosInvalida # RETORNA ERROR 404 INFORMANDO
+
+    #VERIFICA SE O USUARIO ESTA CADASTRADO
+    for cliente in armazenamento:
+        if cliente.cpf == dadosVenda.cpfComprador:
+           dadosVenda.nomeComprador = format(cliente.nome) # CASO EXISTA PEGA O NOME DO COMPRADOR
+           break
+    else:
+        return compradorNaoCadastrado # RETORNA ERROR 404 FALANDO Q COMPRADO NÃO ESTA CADASTRADO
+
+
+    # CONSUMINDO A API DE VENDORES
+    pegandoVendedor = requests.get("https://afternoon-fortress-37984.herokuapp.com/api/vendedores/{}".format(dadosVenda.idVendedor))
+    # VERIFICA SE O VENDEDOR ESTA CADASTRADO    
+    verificarVendor = pegandoVendedor.json()
+    verificarVendor = format(verificarVendor["data"])
+    if str(verificarVendor) == "None":
+        return vendedorNaoCadastrado # RETORNA ERROR 404 VENDOR NÃO LOCALIZADO
+    
+    pegandoVendedor = pegandoVendedor.json()
+    dadosVenda.vendedor = format(pegandoVendedor["data"]["attributes"]["nome"])
+
+
+
+    pegarProduto = requests.get("https://afternoon-fortress-37984.herokuapp.com/api/produtos/{}".format(dadosVenda.idProduto))
+    pegarProduto = pegarProduto.json()
+    produtoValidador = format(pegarProduto["data"])
+    if str(produtoValidador) == "None":
+        return produtoNaoLocalizado # RETORNA ERROR 404 VENDOR NÃO LOCALIZADO
+    dadosVenda.produto = format(pegarProduto["data"]["attributes"]["produto"])
+    dadosVenda.precoUnidade = format(pegarProduto["data"]["attributes"]["preco"])
+    dadosVenda.precoTotal = format(int(pegarProduto["data"]["attributes"]["preco"]) * int(dadosVenda.quantidade))
+
+
+
+
+    dadosVenda.id = str(uuid4())
+    armazenamentoVendas.append(dadosVenda)
+    return sucessoVenda
